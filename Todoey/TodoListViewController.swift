@@ -9,14 +9,14 @@
 import UIKit
 
 class TodoListViewController: UITableViewController {
-
-  var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+  let defaults_items_key = "TodoListItemArray"
+  var itemArray = [Item]()
   
   let defaults = UserDefaults.standard
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+    if let items = defaults.array(forKey: defaults_items_key) as? [Item] {
       self.itemArray = items
     }
 
@@ -34,19 +34,19 @@ class TodoListViewController: UITableViewController {
   
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
-    cell.textLabel?.text = itemArray[indexPath.row]
+    let item = itemArray[indexPath.row]
+    cell.textLabel?.text = item.title
+    cell.accessoryType = item.done ? .checkmark : .none
     return cell
   }
   
   // MARK: TableView Delegate Methods
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     //print("selected \(itemArray[indexPath.row])")
-    if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-      tableView.cellForRow(at: indexPath)?.accessoryType = .none
-    } else {
-      tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-    }
+    itemArray[indexPath.row].done = !itemArray[indexPath.row].done
     tableView.deselectRow(at: indexPath, animated: true)
+    //self.defaults.set(self.itemArray, forKey: defaults_items_key)
+    tableView.reloadData()
   }
   
   // MARK: Add New Items
@@ -60,8 +60,9 @@ class TodoListViewController: UITableViewController {
       // what will happen once the user clicks the Add Item button UI Alert
       if let newItem = textField.text {
         if !newItem.isEmpty {
-          self.itemArray.append(newItem)
-          self.defaults.set(self.itemArray, forKey: "TodoListArray")
+          let item = Item(newItem)
+          self.itemArray.append(item)
+          //self.defaults.set(self.itemArray, forKey: self.defaults_items_key)
           self.tableView.reloadData()
         }
       }
